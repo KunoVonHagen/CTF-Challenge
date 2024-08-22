@@ -1,0 +1,7 @@
+<header>
+    {% if username %}
+        <p>Logged in as {{ username }} | <a href="{{ url_for('logout') }}">Logout</a></p>
+    {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+    {% endif %}
+</header>

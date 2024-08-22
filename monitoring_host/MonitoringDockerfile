@@ -1,0 +1,91 @@
+# Base image: Ubuntu 20.04 (focal)
+FROM ubuntu:focal
+
+ARG MONITORING_FLAG1_SECRET
+ARG MONITORING_FLAG2_SECRET
+ARG MONITORING_INTERVALL_SECONDS
+ARG MONITORING_SESSION_SECRET
+
+# Set environment variables to disable interactive prompts and set the timezone
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Berlin
+
+# Configure the timezone data for the container
+RUN echo "tzdata tzdata/Areas select Europe" | debconf-set-selections
+RUN echo "tzdata tzdata/Zones/Europe select Berlin" | debconf-set-selections
+
+# Update package lists and install necessary packages
+RUN apt-get update && \
+    apt-get install -y \
+    nano \
+    gcc \
+    net-tools \
+    wget \
+    netcat \
+    curl \
+    git \
+    less \
+    coreutils \
+    lsb-release \
+    make \
+    cmake \
+    build-essential \
+    tar \
+    unzip \
+    python3 \
+    python3-pip \
+    python3-venv \
+    libssl-dev \
+    sudo \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create a new user named 'monitoring'
+RUN useradd -m monitoring
+
+# Set the working directory to the new user's home directory
+WORKDIR /home/monitoring
+
+# Copy files from the local machine to the container
+COPY monitoring/root /root/
+COPY monitoring/app /home/monitoring/
+
+# Set permissions and ownership for the /home/monitoring directory
+RUN chmod -R 777 /home/monitoring/
+RUN chown -R monitoring:monitoring /home/monitoring/
+
+# Install Python dependencies from requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Install Playwright dependencies
+RUN playwright install-deps
+
+# Switch to 'monitoring' user
+USER monitoring
+
+# Install Playwright and its necessary components
+RUN playwright install
+
+USER root
+
+RUN gcc -g -fno-stack-protector -z execstack -no-pie -o /home/monitoring/get_flags /home/monitoring/get_flags.c -lssl -lcrypto
+RUN chown root:root /home/monitoring/get_flags
+RUN chown root:root /home/monitoring/get_flags.c
+RUN chmod 4755 /home/monitoring/get_flags
+RUN chmod 4755 /home/monitoring/get_flags.c
+
+# Make certain scripts executable
+RUN chmod +x /root/check_monitoring.sh
+
+RUN echo $MONITORING_FLAG1_SECRET > /root/secret1.txt
+RUN echo $MONITORING_FLAG2_SECRET > /root/secret2.txt
+
+# Expose port 2222 for external access
+EXPOSE 2222
+
+USER monitoring
+
+RUN chmod +x /home/monitoring/start_monitoring.sh
+
+# Specify the default command to run when the container starts
+CMD /home/monitoring/start_monitoring.sh

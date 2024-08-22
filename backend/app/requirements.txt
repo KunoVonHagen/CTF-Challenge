@@ -1,0 +1,3 @@
+sockets
+pycryptodome
+sympy

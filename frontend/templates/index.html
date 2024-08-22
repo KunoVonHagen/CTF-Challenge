@@ -1,0 +1,13 @@
+<h1>My little Website</h1>
+<h2>Leave a Comment</h2>
+<form action="/submit" method="post">
+    <textarea name="comment" rows="4" cols="50"></textarea><br>
+    <input type="submit" value="Submit">
+</form>
+<h2>Comments</h2>
+<ul>
+    {% for comment in comments %}
+        <li>{{ comment|safe }}</li>
+    {% endfor %}
+</ul>
+<p>If this page or any other seems down, just look at our <a href="/status"> Monitoring Service </a>

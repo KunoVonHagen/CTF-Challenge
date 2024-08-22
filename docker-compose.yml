@@ -1,0 +1,104 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        FRONTEND_FLAG_SECRET: ${FRONTEND_FLAG_SECRET}
+    depends_on:
+      - backend
+    networks:
+      database_network:
+        ipv4_address: 10.0.0.2
+      monitoring_network:
+        ipv4_address: 10.2.0.2
+    ports:
+      - "80:8080"   
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:
+      - "ctf-challenge.edu:10.0.0.2"
+      - "ctf-challenge.edu:10.2.0.2"
+      - "ctf-challenge.edu:127.0.0.1"
+      - "backend.ctf-challenge.edu:10.0.0.3"
+      - "monitoring.ctf-challenge.edu:10.2.0.3"
+    
+      
+
+  backend:
+    build:
+      context: ./backend
+      args:
+        BACKEND_ADMIN_USER: ${BACKEND_ADMIN_USER}
+        BACKEND_ADMIN_PASSWORD: ${BACKEND_ADMIN_PASSWORD}
+        BACKEND_FLAG1_SECRET: ${BACKEND_FLAG1_SECRET}
+        BACKEND_FLAG2_SECRET: ${BACKEND_FLAG2_SECRET}
+    networks:
+      database_network:
+        ipv4_address: 10.0.0.3
+      maintenance_network:
+        ipv4_address: 10.1.0.2
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:
+      - "backend.ctf-challenge.edu:10.0.0.3"
+      - "backend.ctf-challenge.edu:10.1.0.2"
+      - "backend.ctf-challenge.edu:127.0.0.1"
+      - "ctf-challenge.edu:10.0.0.2"
+      - "monitoring.ctf-challenge.edu:10.1.0.3"
+    environment:
+      BACKEND_ADMIN_PASSWORD: ${BACKEND_ADMIN_PASSWORD}
+      MONITORING_SESSION_SECRET: ${MONITORING_SESSION_SECRET}
+ 
+
+  monitoring:
+    build:
+      context: ./monitoring_host
+      args:
+        MONITORING_HOST_FLAG_SECRET: ${MONITORING_HOST_FLAG_SECRET}
+    depends_on:
+      - frontend
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup
+    privileged: true
+    networks:
+      maintenance_network:
+        ipv4_address: 10.1.0.3
+      monitoring_network:
+        ipv4_address: 10.2.0.3        
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:
+      - "monitoring.ctf-challenge.edu:10.0.0.3"
+      - "monitoring.ctf-challenge.edu:10.2.0.3"
+      - "monitoring.ctf-challenge.edu:127.0.0.1"
+      - "backend.ctf-challenge.edu:10.1.0.2"
+      - "ctf-challenge.edu:10.2.0.2"
+    environment:
+      MONITORING_INTERVAL_SECONDS: ${MONITORING_INTERVAL_SECONDS}
+      MONITORING_SESSION_SECRET: ${MONITORING_SESSION_SECRET}
+      MONITORING_FLAG1_SECRET: ${MONITORING_FLAG1_SECRET}
+      MONITORING_FLAG2_SECRET: ${MONITORING_FLAG2_SECRET}
+      MONITORING_HOST_CHECK_MONITORING_INTERVAL_SECONDS: ${MONITORING_HOST_CHECK_MONITORING_INTERVAL_SECONDS}
+    
+      
+      
+
+networks:
+  database_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24
+  maintenance_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.1.0.0/24      
+  monitoring_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.2.0.0/24

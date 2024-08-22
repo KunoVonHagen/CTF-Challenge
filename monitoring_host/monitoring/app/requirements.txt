@@ -1,0 +1,4 @@
+flask
+playwright
+requests
+sympy
