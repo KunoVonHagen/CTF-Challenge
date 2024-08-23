@@ -1,28 +1,6 @@
 import socket
 import threading
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
-
-def read_with_length(conn, key, iv):
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    length = int.from_bytes(conn.recv(4), byteorder='big')
-    buffer = b''
-
-    while length > 0:
-        data = conn.recv(length)
-        buffer += data
-        length -= len(data)
-
-    plaintext = unpad(cipher.decrypt(buffer), AES.block_size)
-    return plaintext
-
-
-def send_with_length(conn, message, key, iv):
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    ciphertext = cipher.encrypt(pad(message, AES.block_size))
-    length = len(ciphertext).to_bytes(4, byteorder='big')
-    conn.sendall(length + ciphertext)
-
+from db_library import send_with_length, read_with_length, custom_encode
 
 class DatabaseServer:
     def __init__(self, ip, port, actions, key, iv):
@@ -47,6 +25,7 @@ class DatabaseServer:
             print("New connection from", addr)
             db_connection = DatabaseConnection(conn, self.actions, self.key, self.iv)
             db_connection.start()
+
 
 class DatabaseConnection(threading.Thread):
     def __init__(self, socket:socket.socket, actions, key, iv):
@@ -82,23 +61,7 @@ class DatabaseConnection(threading.Thread):
                     print(f"Executing action {action} with args {kwargs}")
                     result = self.actions[action](**kwargs)
 
-                    formatted_result = b""
-                    for key, value in result.items():
-                        if isinstance(value, list):
-                            formatted_value = b"\x03".join([item.encode() for item in value]) + b"\x03"
-
-                        elif isinstance(value, bool):
-                            formatted_value = b"\x04" if value else b"\x05"
-
-                        else:
-                            formatted_value = value.encode()
-
-                        formatted_result += key.encode() + b"\x02" + formatted_value + b"\x01"
-
-                    if b"\x01" in formatted_result:
-                        formatted_result = formatted_result[:-1]
-
-                    send_with_length(self.socket, formatted_result, self.key, self.iv)
+                    send_with_length(self.socket, custom_encode(result), self.key, self.iv)
 
                 except Exception as e:
                     send_with_length(self.socket, str(e).encode(), self.key, self.iv)

@@ -12,12 +12,6 @@ monitoring_interval_seconds = int(os.getenv('MONITORING_INTERVAL_SECONDS'))
 monitoring_session_secret = os.getenv('MONITORING_SESSION_SECRET')
 monitoring_session = hashlib.md5(monitoring_session_secret.encode()).hexdigest()
 
-# Calculate a far-future expiration date
-expires_at = datetime.utcnow() + timedelta(days=365*10)  # 10 years in the future
-
-# Convert to timestamp
-expires_timestamp = int(expires_at.timestamp())
-
 # Base URL
 website_host = 'ctf-challenge.edu'
 website_port = 8080
@@ -26,7 +20,7 @@ url = f"http://{website_host}:{website_port}"
 
 # Pages to check
 check_pages = [{'url': f'', 'title': 'Index'},
-               {'url': f'/admin', 'title': 'Admin'},
+               {'url': f'/admin', 'title': 'Admin Panel'},
                {'url': f'/login', 'title': 'Login'},
                {'url': f'/status', 'title': 'Status'},
                {'url': f'/monitoring-test', 'title': 'Monitoring Test (switches between 200, 403, 404)'}]
@@ -56,11 +50,6 @@ async def main():
             for page_info in check_pages:
                 response = await page.goto(url + page_info['url'])
                 await page.wait_for_load_state('networkidle')  # Wait for the page to load completely
-                
-                cookies = await context.cookies()
-                #print("Cookies:", cookies)
-
-                #print(response.status, page_info['url'])
 
                 # Build status dictionary
                 status = {
@@ -70,7 +59,7 @@ async def main():
                     'description': responses[response.status]
                 }
 
-                #print(status)
+                print(status)
 
                 # Post the status update
                 await page.request.post(f'{url}/update-status', data={'status_update': status})

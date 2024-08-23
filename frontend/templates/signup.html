@@ -1,0 +1,31 @@
+<form id="signup-form" method="POST" action="{{ url_for('signup') }}">
+    <h1 id="signup-title">Signup</h1>
+    <div class="form-group">
+        <input type="text" name="username" placeholder="Username" class="form-input" required>
+    </div>
+    <div class="form-group">
+        <input type="password" name="password" placeholder="Password" class="form-input" required>
+    </div>
+    <div class="form-group">
+        <input type="password" name="confirm-password" placeholder="Confirm Password" class="form-input" required>
+    </div>
+    <button type="submit" class="submit-button" disabled>Signup</button>
+    <div id="error-message" style="color: red; display: none;">Passwords do not match.</div>
+</form>
+
+<script>
+    const passwordInput = document.querySelector('input[name="password"]');
+    const confirmPasswordInput = document.querySelector('input[name="confirm-password"]');
+    const errorMessage = document.getElementById('error-message');
+    const submitButton = document.querySelector('button[type="submit"]');
+
+    confirmPasswordInput.addEventListener('input', () => {
+        if (passwordInput.value !== confirmPasswordInput.value) {
+            errorMessage.style.display = 'block';
+            submitButton.setAttribute('disabled', 'disabled');
+        } else {
+            errorMessage.style.display = 'none';
+            submitButton.removeAttribute('disabled');
+        }
+    });
+</script>

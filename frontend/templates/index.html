@@ -1,13 +1,51 @@
-<h1>My little Website</h1>
-<h2>Leave a Comment</h2>
-<form action="/submit" method="post">
-    <textarea name="comment" rows="4" cols="50"></textarea><br>
-    <input type="submit" value="Submit">
-</form>
-<h2>Comments</h2>
-<ul>
-    {% for comment in comments %}
-        <li>{{ comment|safe }}</li>
-    {% endfor %}
-</ul>
-<p>If this page or any other seems down, just look at our <a href="/status"> Monitoring Service </a>
+<!-- Main Title -->
+<h1 id="main-title">My Little Website</h1>
+
+<!-- Section: Our Cats -->
+<div class="section">
+    <h2 class="section-title">Our Cats</h2>
+    <div id="cats-gallery">
+        {% for cat in cats %}
+            <div class="cat-card">
+                <div class="cat-header">
+                    <img src="data:image/{{ cat.filetype }};base64,{{ cat.picture }}" alt="{{ cat.name }}" class="cat-image">
+                </div>
+                <div class="cat-info">
+                    <h5 class="cat-name">{{ cat.name }}</h5>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+<!-- Section: Leave a Comment -->
+<div class="section">
+    <h2 class="section-title">Leave a Comment</h2>
+    <form action="/add-comment" method="post" id="comment-form">
+        <div class="form-group">
+            <input type="text" name="author" placeholder="Enter your name" class="form-input" required>
+        </div>
+        <div class="form-group">
+            <textarea name="comment" rows="12" placeholder="Write your comment here..." class="form-textarea" required></textarea>
+        </div>
+        <button type="submit" class="submit-button comment-button">Comment</button>
+    </form>
+</div>
+
+
+<!-- Section: Comments -->
+<div class="section">
+    <h2 class="section-title">Comments</h2>
+    <div id="comments-section">
+        {% for comment in comments %}
+            <div class="comment-card">
+                <div class="comment-header">
+                    <strong class="comment-author">{{ comment.author }}</strong> <br>
+                    <small class="comment-time">{{ comment.time_written }}</small>
+                </div>
+                <div class="comment-content">{{ comment.content | safe}}</div>
+            </div>
+        {% endfor %}
+    </div>
+</div>

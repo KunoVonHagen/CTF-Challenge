@@ -1,0 +1,23 @@
+<h1 id="add-cat-title">Add Cat</h1>
+<form id="add-cat-form" action="/admin/add-cat" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="name" class="form-label">Name:</label>
+        <input type="text" name="name" id="name" class="form-input">
+    </div>
+    <div class="form-group">
+        <label for="picture" class="form-label">
+            Picture:
+            <span id="file-name" class="file-name"></span>
+        </label>
+        <label for="picture" class="custom-file-upload">Browse</label>
+        <input type="file" name="picture" id="picture" class="form-input">
+    </div>
+    <input type="submit" value="Submit" class="submit-button add-page-submit">
+</form>
+
+<script>
+    document.getElementById('picture').addEventListener('change', function() {
+        var fileName = this.files[0].name;
+        document.getElementById('file-name').textContent = fileName;
+    });
+</script>

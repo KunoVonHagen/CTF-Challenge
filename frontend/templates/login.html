@@ -1,7 +1,10 @@
-<form method="POST" action="{{ url_for('login') }}">
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required>
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required>
-    <button type="submit">Login</button>
+<form id="login-form" method="POST" action="{{ url_for('login') }}">
+    <h1 id="login-title">Login</h1>
+    <div class="form-group">
+        <input type="text" name="username" placeholder="Username" class="form-input" required>
+    </div>
+    <div class="form-group">
+        <input type="password" name="password" placeholder="Password" class="form-input" required>
+    </div>
+    <button type="submit" class="submit-button">Login</button>
 </form>

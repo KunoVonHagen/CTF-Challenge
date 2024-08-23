@@ -1,20 +1,21 @@
-<style>
-    p._200 {
-        color: green;
-    }
 
-    p:not(._200):not(.text) {
-        color: red;
-    }
-</style>
+<h1 id="monitoring-title">Monitoring Service</h1>
+<!-- Iterate over status pages and display their information -->
+<div id="status-list">
+    {% for page in status %}
+        <p class="status-item">
+            <a href="{{ page }}" class="status-link">{{ status[page].title }}</a>:<br>
+            <span class="status-info _{{ status[page].code }}">{{ status[page].code }} - {{ status[page].description }}</span>
+        </p>
+    {% endfor %}
+</div>
+
+<!-- Display the last update timestamp -->
+<p id="last-update">Last Update: {{ last_update }}</p>
+
+<!-- JavaScript for auto-refreshing the page -->
 <script>
     setInterval(function() {
         location.reload();
-    }, 5000); // 5000 milliseconds = 5 seconds
+    }, 5000); // Refresh the page every 5 seconds
 </script>
-
-<h1>Monitoring Service</h1>
-{% for page in status %}
-    <p class="text"><a href="{{ page }}">{{ status[page].title }}</a>: <p class="_{{ status[page].code }}">{{ status[page].code }} - {{ status[page].description }}</p>
-{% endfor %}
-<p class="text" style="position: absolute; bottom: 0;">Last Update: {{ last_update }}</p>

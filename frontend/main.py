@@ -3,9 +3,7 @@ from flask import Flask, request, render_template_string, redirect, url_for, mak
 import subprocess
 import os
 import datetime
-import requests
 from base64 import b64encode, b64decode
-from werkzeug.middleware.profiler import ProfilerMiddleware
 import client as db_client
 
 app = Flask(__name__)
@@ -19,15 +17,16 @@ NUM_DB_CLIENTS = 5
 
 key = b'iT\xe1\xb47\xa3\xad\xfe$\x96\x82:H\x0b\x9d\xc3'
 iv = b"\xab\xd3\x11'\xa1\x83\xad.)\x1e\xf8\x13\xfc]\xe5\x1d"
-client = db_client.DatabaseClient(database_server_addr, database_server_port, key, iv)
 
-db_clients = [[db_client.DatabaseClient(database_server_addr, database_server_port, key, iv), True] for i in range(NUM_DB_CLIENTS)]
+db_clients = [[db_client.DatabaseClient(database_server_addr, database_server_port, key, iv), True] for i in
+              range(NUM_DB_CLIENTS)]
+
 
 def db_request(action, **kwargs):
     global db_clients
     client = None
     index = None
-    
+
     while client is None:
         for i in range(len(db_clients)):
             if db_clients[i][1]:
@@ -35,17 +34,17 @@ def db_request(action, **kwargs):
                 client = db_clients[i][0]
                 index = i
                 break
-    
+
     result = client.request(action, **kwargs)
     db_clients[index][1] = True
-    
+
     return result
-    
+
 
 status = {
     "/": {"title": "Index", "code": "200", "description": "OK"},
-    "/admin": {"title": "Admin", "code": "200", "description": "OK"},
-    "/login": {"title": "Admin Login", "code": "200", "description": "OK"},
+    "/admin": {"title": "Admin Panel", "code": "200", "description": "OK"},
+    "/login": {"title": "Login", "code": "200", "description": "OK"},
     "/monitoring-test": {"title": "Monitoring Test (switches between 200, 403, 404)", "code": "200", "description": "OK"},
     "/status": {"title": "Status", "code": "200", "description": "OK"},
 }
@@ -55,9 +54,10 @@ last_update = datetime.datetime.now().strftime("%d.%m.%Y - %H:%M:%S")
 pages = [
     {"title": "Index", "url": "/"},
     {"title": "Update Status", "url": "/update-status"},
-    {"title": "Admin", "url": "/admin"},
-    {"title": "Admin Login", "url": "/admin-login"},
-    {"title": "Add Page", "url": "/admin/add-page"}
+    {"title": "Admin Panel", "url": "/admin"},
+    {"title": "Login", "url": "/login"},
+    {"title": "Add Page", "url": "/admin/add-page"},
+    {"title": "Add Cat", "url": "/admin/add-cat"}
 ]
 
 dynamic_pages = []
@@ -65,7 +65,43 @@ dynamic_pages = []
 monitoring_values = [200, 403, 404]
 actual_monitor_test = 0
 
-header = open("templates/header.html").read()
+with open("templates/header.html") as file:
+    header = file.read()
+
+with open("templates/footer.html") as file:
+    footer = file.read()
+
+with open("templates/style.css") as file:
+    style = f"<style>{file.read()}</style>" + \
+    '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">'
+
+def main_content_wrap(html):
+    return f'<div class="main-content">{html}</div>'
+
+
+def redirect_with_session(location, new_session=False):
+    response = redirect(location)
+    if "session" not in request.cookies or new_session:
+        response.set_cookie("session", get_temp_session())
+    return response
+
+
+def render_template_with_session(html, **kwargs):
+    html = style + header + main_content_wrap(html) + footer
+
+    if "session" not in request.cookies:
+        response = make_response(render_template_string(html, **kwargs))
+        response.set_cookie("session", get_temp_session())
+        return response
+
+    username = get_username_from_session(request.cookies.get("session"))
+    has_privileges = check_privileged_session(request.cookies.get("session"))
+    return render_template_string(html, username=username, has_privileges=has_privileges, **kwargs)
+
+
+def render_template_file_with_session(file, **kwargs):
+    html = open("templates/" + file).read()
+    return render_template_with_session(html, **kwargs)
 
 
 def sanitize_to_b64_chars(input):
@@ -85,26 +121,41 @@ def get_temp_session():
 
 
 def get_user_session(username, password):
+    username = sanitize_to_b64_chars(username)
     res = db_request('get-user-session', username=username, password=password)
     session = res['session'] if res['success'] else None
     return session
 
 
 def signup_user(username, password):
+    username = sanitize_to_b64_chars(username)
     res = db_request('signup-user', username=username, password=password)
-    return res['success'], res['message']
-
-
-def add_comment(session, comment):
-    session = sanitize_to_b64_chars(session)
-    b64_comment = b64encode(comment.encode()).decode()
-    res = db_request('add-comment', session=session, comment=b64_comment)
     return res['success']
+
+
+def add_comment(author, comment):
+    author = sanitize_to_b64_chars(author)
+    b64_comment = b64encode(comment.encode()).decode()
+    res = db_request('add-comment', author=author, comment=b64_comment)
+    return res['success']
+
+
+def get_cats():
+    res = db_request('get-cats')
+    return res['cats']
 
 
 def get_comments():
     res = db_request('get-comments')
-    decoded_comments = [b64decode(comment).decode() for comment in res['comments']]
+    decoded_comments = []
+
+    for comment in res['comments']:
+        decoded_comments.append({
+            'author': comment['author'],
+            'content': b64decode(comment['content']).decode(),
+            'time_written': comment['time_written']
+        })
+
     return decoded_comments
 
 
@@ -127,43 +178,36 @@ def logout_user(session):
     res = db_request('logout-user', session=session)
     return res['success']
 
-def redirect_with_session(location, new_session=False):
-    response = redirect(location)
-    if "session" not in request.cookies or new_session:
-        response.set_cookie("session", get_temp_session())
-    return response
 
+def add_cat(name, picure_b64, filetype):
+    name = sanitize_to_b64_chars(name)
+    filetype = sanitize_to_b64_chars(filetype)
+    res = db_request('add-cat', name=name, picture=picure_b64, filetype=filetype)
+    return res['success']
 
-def render_template_with_session(html, **kwargs):
-    html = header + html
-
-    if "session" not in request.cookies:
-        response = make_response(render_template_string(html, **kwargs))
-        response.set_cookie("session", get_temp_session())
-        return response
-
-    username = get_username_from_session(request.cookies.get("session"))
-    return render_template_string(html, username=username, **kwargs)
-
-
-def render_template_file_with_session(file, **kwargs):
-    html = open("templates/" + file).read()
-    return render_template_with_session(html, **kwargs)
 
 @app.route('/')
 def index():
     comments = get_comments()
+    cats = get_cats()
+
     if comments == ['']:
         comments = []
-    return render_template_file_with_session("index.html", status=status, comments=comments)
+
+    for comment in comments:
+        print(comment)
+
+    return render_template_file_with_session("index.html", comments=comments, cats=cats), 200
 
 
-@app.route('/submit', methods=['POST'])
+@app.route('/add-comment', methods=['POST'])
 def submit():
+    author = request.form['author']
     comment = request.form['comment']
-    session = request.cookies.get('session')
 
-    add_comment(session, comment)
+    print(comment)
+
+    add_comment(author, comment)
     return redirect_with_session(url_for('index')), 303
 
 
@@ -172,14 +216,19 @@ def update_status():
     global status
     global last_update
     session = request.cookies.get('session')
-	
+
     if not session or not check_privileged_session(session):
         return render_template_file_with_session("403_not_privileged.html"), 403
 
     if request.method == 'POST':
         status_update = json.loads(request.data)['status_update']
-        status[status_update['url']] = {"title": status_update['title'], "code": status_update['code'], "description": status_update['description']}
+        code = status_update['code']
+        description = status_update['description']
+
+        status[status_update['url']]['code'] = code
+        status[status_update['url']]['description'] = description
         last_update = datetime.datetime.now().strftime("%d.%m.%Y - %H:%M:%S")
+
         return redirect_with_session(url_for('index')), 303
 
     return render_template_file_with_session('update_status.html'), 200
@@ -266,6 +315,20 @@ def login():
     return render_template_file_with_session('login.html'), 200
 
 
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if not valid_username(username):
+            return render_template_file_with_session('400_invalid_username.html'), 400
+        success = signup_user(username, password)
+        if success:
+            return redirect_with_session(url_for('login')), 303
+        return render_template_file_with_session('400_user_exists.html'), 400
+    return render_template_file_with_session('signup.html'), 200
+
+
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
     session = request.cookies.get('session')
@@ -273,6 +336,29 @@ def logout():
         logout_user(session)
 
     return redirect_with_session(url_for('index'), True), 303
+
+
+@app.route('/admin/add-cat', methods=['GET', 'POST'])
+def add_cat_page():
+    session = request.cookies.get('session')
+    if not session or not check_privileged_session(session):
+        return render_template_file_with_session("403_not_privileged.html"), 403
+
+    if request.method == 'POST':
+        name = request.form['name']
+        picture = request.files['picture']
+
+        filetype = picture.filename.split('.')[-1]
+        if filetype not in ['jpg', 'jpeg', 'png']:
+            return render_template_file_with_session('400_invalid_filetype.html'), 400
+
+        picture_b64 = b64encode(picture.read()).decode()
+
+        add_cat(name, picture_b64, filetype)
+        return redirect_with_session(url_for('index')), 303
+
+    return render_template_file_with_session('add_cat.html'), 200
+
 
 
 if __name__ == '__main__':

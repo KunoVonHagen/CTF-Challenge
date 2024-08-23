@@ -103,7 +103,7 @@ RUN dpkg -i sudo_1.8.21p2-3ubuntu1_amd64.deb
 RUN apt-get install -f
 RUN rm sudo_1.8.21p2-3ubuntu1_amd64.deb
 
-# Create a new user 
+# Create a new user
 RUN useradd -m $BACKEND_ADMIN_USER
 
 # Set a password for the user

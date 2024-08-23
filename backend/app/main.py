@@ -29,22 +29,35 @@ def init_db():
     cursor.execute(f"INSERT INTO sessions (session, username, created_at) VALUES ('{monitoring_session}', 'monitoring', {now})")
     conn.commit()
     cursor.close()
-    
-    
-    
+
 
 def session_cookie():
     return hashlib.md5((str(random.randint(10000,20000)) + str(time.time()) + "S3cr3t").encode()).hexdigest()
 
 
-def insert_user_if_not_exists(username, hashed_password):
+def get_cats():
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT * FROM cats")
+    cats = cursor.fetchall()
+
+    res = []
+    for _, name, picture, filetype in cats:
+        res.append({'name': name, 'picture': picture, 'filetype': filetype})
+
+    cursor.close()
+
+    return {"cats": res}
+
+
+def insert_user_if_not_exists(username, password):
+    hashed_password = hashlib.md5(password.encode()).hexdigest()
     success = False
     cursor = conn.cursor()
     cursor.execute(f"SELECT * FROM users WHERE username='{username}'")
     user = cursor.fetchone()
 
     if user is None:
-        cursor.execute(f"INSERT INTO users (username, password) VALUES ('{username}', '{hashed_password}')")
+        cursor.execute(f"INSERT INTO users (username, password, has_privileges) VALUES ('{username}', '{hashed_password}', 0)")
         conn.commit()
         success = True
 
@@ -118,9 +131,9 @@ def is_user_session(session):
     return {'success': session is not None}
 
 
-def add_comment(session, comment):
+def add_comment(author, comment):
     cursor = conn.cursor()
-    cursor.execute(f"INSERT INTO comments (content) VALUES ('{comment}')")
+    cursor.execute(f"INSERT INTO comments (author, content, time_written) VALUES ('{author}', '{comment}', {time.time()})")
     conn.commit()
     cursor.close()
 
@@ -143,16 +156,33 @@ def get_comments():
     comments = cursor.execute("SELECT * FROM comments").fetchall()
     cursor.close()
 
-    return {'comments': [row[0] for row in comments]}
+    res = []
+    for content, _, author, time_written in comments:
+        formatted_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time_written))
+        res.append({'author': author, 'content': content, 'time_written': formatted_time})
+
+    return {'comments': res}
+
+
+def add_cat(name, picture, filetype):
+    cursor = conn.cursor()
+    cursor.execute(f"INSERT INTO cats (name, picture, filetype) VALUES ('{name}', '{picture}', '{filetype}')")
+    conn.commit()
+    cursor.close()
+
+    return {'success': True}
+
 
 actions = {"signup-user": insert_user_if_not_exists,
-              "check-privileged-session": is_priviliged_session,
-              "logout-user": logout_user,
-              "get-user-session": get_user_session,
-              "get-temp-session": get_temp_session,
-              "add-comment": add_comment,
-              "get-username-from-session": get_session_username,
-              "get-comments": get_comments}
+           "check-privileged-session": is_priviliged_session,
+           "logout-user": logout_user,
+           "get-user-session": get_user_session,
+           "get-temp-session": get_temp_session,
+           "add-comment": add_comment,
+           "get-username-from-session": get_session_username,
+           "get-comments": get_comments,
+           "get-cats": get_cats,
+           "add-cat": add_cat}
 
 key = b'iT\xe1\xb47\xa3\xad\xfe$\x96\x82:H\x0b\x9d\xc3'
 iv = b"\xab\xd3\x11'\xa1\x83\xad.)\x1e\xf8\x13\xfc]\xe5\x1d"

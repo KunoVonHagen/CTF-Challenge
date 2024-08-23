@@ -1,6 +1,8 @@
-<h1>Pages</h1>
-<ul>
+<h1 id="pages-title">Pages</h1>
+<ul id="pages-list">
     {% for page in pages %}
-    <li><a href="{{ page.url }}">{{ page.title }}</a></li>
+    <li class="page-item">
+        <a href="{{ page.url }}" class="page-link">{{ page.title }}</a>
+    </li>
     {% endfor %}
 </ul>
