@@ -1,0 +1,23 @@
+2020-03-16 ~ admin
+Setting up the website, hope our visitors will like the beautiful cats we have here
+
+2020-03-18 ~ evan
+Added the beautiful cats to our page. Now we are ready for our first visitor!
+
+2020-03-23 ~ admin
+Added the comment section so we can get some feedback
+
+2020-03-24 ~ admin
+Added the add cat function. Now our staff can add cats of their own
+
+2020-03-27 ~ admin
+Added the "Add Page" function. Our staff can add custom pages now. Even php works if someone wants to use it.
+
+2020-03-31 ~ admin
+Rewrote the frontend to fetch content and manage sessions through the backend. This starts to feel like a real web application.
+
+2020-04-01 ~ maya
+Moved all the data from the frontend to the backend
+
+2020-04-04 ~ admin
+Added a page for our monitoring service. Now our users will know if the website is down.

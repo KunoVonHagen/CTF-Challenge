@@ -1,0 +1,5 @@
+2020-04-07 ~ admin
+Maybe i should use a newer version than docker 18.09.1 But what is the worst that could happen anyway? I mean it's just a VM
+
+2020-04-09 ~ admin
+Setting up a script that keeps the monitoring running. Probably not the best way to use docker exec repeatedly but i dont know how to set up a cron job

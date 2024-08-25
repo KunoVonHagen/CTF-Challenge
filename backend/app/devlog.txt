@@ -1,0 +1,5 @@
+2020-03-30 ~ admin
+Setting up the database. Now we dont need to handle things on the frontend anymore
+
+2020-04-01 ~ maya
+Moved all the data from the frontend to the backend
