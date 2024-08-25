@@ -65,6 +65,10 @@ services:
       - frontend
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup
+      - type: bind
+        source: ./images/monitoring.img.tar
+        target: /root/monitoring.img.tar
+        read_only: true
     privileged: true
     networks:
       maintenance_network:
@@ -81,11 +85,11 @@ services:
       - "backend.ctf-challenge.edu:10.1.0.2"
       - "ctf-challenge.edu:10.2.0.2"
     environment:
-      MONITORING_INTERVAL_SECONDS: ${MONITORING_INTERVAL_SECONDS}
-      MONITORING_SESSION_SECRET: ${MONITORING_SESSION_SECRET}
       MONITORING_FLAG1_SECRET: ${MONITORING_FLAG1_SECRET}
       MONITORING_FLAG2_SECRET: ${MONITORING_FLAG2_SECRET}
       MONITORING_HOST_CHECK_MONITORING_INTERVAL_SECONDS: ${MONITORING_HOST_CHECK_MONITORING_INTERVAL_SECONDS}
+      LOAD_IMAGES: ${LOAD_IMAGES}
+      
     
 networks:
   database_network:

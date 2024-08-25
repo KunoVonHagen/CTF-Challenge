@@ -1,10 +1,25 @@
 #!/bin/bash
 
+touch images/monitoring.img.tar
+
 # Function to display an error message and exit
 function error_exit {
     echo "[ERROR] $1"
     cat /tmp/command_output.log
     exit 1
+}
+
+display_help() {
+    echo "Usage: $(basename $0) [options]"
+    echo
+    echo "Options:"
+    echo "  -b    Build images."
+    echo "  -l    Load images."
+    echo "  -h    Display this help message."
+    echo
+    echo "If no options are provided, this help message will be displayed."
+    echo "You cannot use both -b (build images) and -l (load images) together."
+    exit 0
 }
 
 # Function to monitor the Docker container logs
@@ -29,6 +44,108 @@ function monitor_container_logs {
         sleep 1
     done
 }
+
+# Function to build Docker images
+function build_images {
+    echo "[INFO] Building Docker images..."
+    docker compose build > /tmp/command_output.log 2>&1
+    if [ $? -eq 0 ]; then
+        echo "[INFO] Docker images built successfully."
+        rm -f /tmp/command_output.log
+    else
+        error_exit "Failed to build Docker images."
+    fi
+}
+
+# Function to assemble tar files if they don't exist
+function assemble_tar_files {
+    # Define the directory and filenames
+    local directory="images"
+    local files=("monitoring.img.tar" "backend.img.tar" "monitoring-host.img.tar" "frontend.img.tar")
+
+    # Flag to track if any file is missing
+    local all_files_exist=true
+
+    # Check if each file exists
+    echo "[INFO] Checking if tar files are present in the '$directory' directory..."
+
+    for file in "${files[@]}"; do
+        if [ ! -f "${directory}/${file}" ]; then
+            all_files_exist=false
+            echo "[WARNING] Missing tar file: ${directory}/${file}"
+        fi
+    done
+
+    # Execute the script if any file is missing
+    if [ "$all_files_exist" = false ]; then
+        echo "[INFO] One or more tar files are missing. Assembling tar files..."
+        ./assemble_tars.sh > /tmp/assemble_tars_output.log 2>&1
+        if [ $? -eq 0 ]; then
+            echo "[INFO] Tar files assembled successfully."
+            rm -f /tmp/assemble_tars_output.log
+        else
+            error_exit "Failed to assemble tar files. Check /tmp/assemble_tars_output.log for details."
+        fi
+    else
+        echo "[INFO] All tar files are present. No need to assemble."
+    fi
+}
+
+# Function to load Docker images from tarballs
+function load_images {
+    local images_dir="images"
+    local images=("monitoring-host" "frontend" "backend")
+
+    echo "[INFO] Loading Docker images from tarballs..."
+
+    assemble_tar_files
+
+    for image in "${images[@]}"; do
+        docker import $images_dir/$image.img.tar > /tmp/command_output.log 2>&1
+        if [ $? -eq 0 ]; then
+            echo "[INFO] Docker image '$image' loaded successfully."
+        else
+            error_exit "Failed to load Docker image '$image'."
+        fi
+    done
+
+    rm -f /tmp/command_output.log
+}
+
+# Default values for options
+build_images_flag=false
+load_images_flag=false
+
+# Parse options
+while getopts ":blh" opt; do
+    case $opt in
+        b)
+            build_images_flag=true
+            ;;
+        l)
+            load_images_flag=true
+            ;;
+        h)
+            display_help
+            ;;
+        \?)
+            echo "[ERROR] Invalid option: -$OPTARG"
+            display_help
+            ;;
+    esac
+done
+
+# If no options were passed, display help and exit
+if [ $OPTIND -eq 1 ]; then
+    display_help
+fi
+
+# Ensure that only one of -b or -i is specified
+if [ "$build_images_flag" = true ] && [ "$load_images_flag" = true ]; then
+    error_exit "Cannot use both -b and -i options together."
+elif [ "$build_images_flag" = false ] && [ "$load_images_flag" = false ]; then
+    display_help
+fi
 
 # Check if the script is running as root
 if [ "$EUID" -ne 0 ]; then
@@ -59,27 +176,28 @@ else
     error_exit "Failed to set randomize_va_space to 0."
 fi
 
+# Execute the selected action
+if [ "$build_images_flag" = true ]; then
+    build_images
+    export LOAD_IMAGES=false
+elif [ "$load_images_flag" = true ]; then
+    load_images
+    export LOAD_IMAGES=true
+fi
+
 # Take down any existing Docker containers
-echo "[INFO] Stopping and removing any existing Docker containers..."
+echo "[INFO] Stopping and removing existing Docker containers..."
 docker compose down > /tmp/command_output.log 2>&1
+
+# Check the exit status of the docker-compose command
 if [ $? -eq 0 ]; then
     echo "[INFO] Docker containers stopped and removed successfully."
-    rm -f /tmp/command_output.log
 else
     error_exit "Failed to stop and remove Docker containers."
+    exit 1
 fi
 
-# Build Docker images
-echo "[INFO] Building Docker images..."
-docker compose build > /tmp/command_output.log 2>&1
-if [ $? -eq 0 ]; then
-    echo "[INFO] Docker images built successfully."
-    rm -f /tmp/command_output.log
-else
-    error_exit "Failed to build Docker images."
-fi
-
-# Start Docker Compose
+# Start Docker containers
 echo "[INFO] Starting Docker containers using Docker Compose..."
 docker compose up -d > /tmp/command_output.log 2>&1
 if [ $? -eq 0 ]; then
@@ -90,9 +208,8 @@ else
 fi
 
 echo "[INFO] Waiting for the monitoring service to start up..."
-
 # Monitor logs of the monitoring container
 monitor_container_logs "monitoring-host"
 
 echo "[INFO] Challenge environment is ready."
-echo "[INFO] To access the challenge more easily add '<host ip> ctf-challenge.edu' to your attacking systems /etc/hosts file"
+echo "[INFO] To access the challenge more easily, add '<host ip> ctf-challenge.edu' to your attacking system's /etc/hosts file."

@@ -8,8 +8,8 @@ import hashlib
 import os
 import sys
 
-monitoring_interval_seconds = int(os.getenv('MONITORING_INTERVAL_SECONDS'))
-monitoring_session_secret = os.getenv('MONITORING_SESSION_SECRET')
+monitoring_interval_seconds = 5
+monitoring_session_secret = "3pahdksbnfpdz6v1"
 monitoring_session = hashlib.md5(monitoring_session_secret.encode()).hexdigest()
 
 # Base URL

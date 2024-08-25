@@ -1,1 +1,5 @@
 .idea
+images/backend.img.tar
+images/frontend.img.tar
+images/monitoring.img.tar
+images/monitoring-host.img.tar

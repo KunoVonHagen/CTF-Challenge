@@ -38,9 +38,10 @@ sudo bash set_cgroup_to_v1.sh
 Run the `setup.sh` script, which includes steps to disable ASLR:
 
 ```bash
-sudo bash setup.sh
+sudo bash setup.sh -l
 ```
 
+- The `-l` flag makes the script load the built images from the `images` directory. The `-b` flag can be used to build them from source
 - This script disables ASLR by setting `randomize_va_space` to `0`.
 - The script also stops any running Docker containers, builds the required Docker images, and starts the Docker containers necessary for the challenge.
 - Ensure that ASLR is disabled for the challenge to function as intended.

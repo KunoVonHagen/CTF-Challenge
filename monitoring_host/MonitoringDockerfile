@@ -3,8 +3,6 @@ FROM ubuntu:focal
 
 ARG MONITORING_FLAG1_SECRET
 ARG MONITORING_FLAG2_SECRET
-ARG MONITORING_INTERVALL_SECONDS
-ARG MONITORING_SESSION_SECRET
 
 # Set environment variables to disable interactive prompts and set the timezone
 ENV DEBIAN_FRONTEND=noninteractive

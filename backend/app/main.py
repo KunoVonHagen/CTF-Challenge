@@ -18,9 +18,11 @@ DB_FILE = 'database.db'
 conn = sqlite3.connect(DB_FILE, check_same_thread=False)
 
 def init_db():
+    monitoring_session_secret = "3pahdksbnfpdz6v1"
+
     hashed_admin_password = hashlib.md5(os.getenv("BACKEND_ADMIN_PASSWORD").encode()).hexdigest()
     hashed_monitoring_password = hashlib.md5(generate_random_alphanumeric(16).encode()).hexdigest()
-    monitoring_session = hashlib.md5(os.getenv("MONITORING_SESSION_SECRET").encode()).hexdigest()
+    monitoring_session = hashlib.md5(monitoring_session_secret.encode()).hexdigest()
     now = int(time.time())
 
     cursor = conn.cursor()
