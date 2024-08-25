@@ -6,7 +6,7 @@ server = coolsh.ShellServer(
     'backend',
     'LQK29BSrr5NJ6EqB',
     keysize=2048,
-    allowed_public_keys=[(65537, 1723184294512097897)])
+    allowed_public_keys=[(65537, 166927954504249)])
     
 server.start()
 
