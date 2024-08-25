@@ -87,5 +87,7 @@ USER monitoring
 
 RUN chmod +x /home/monitoring/start_monitoring.sh
 
+USER root
+
 # Specify the default command to run when the container starts
-CMD /home/monitoring/start_monitoring.sh
+CMD sudo -u monitoring /home/monitoring/start_monitoring.sh

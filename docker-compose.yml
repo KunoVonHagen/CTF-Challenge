@@ -1,9 +1,12 @@
+version: '3'
 services:
   frontend:
     build:
       context: ./frontend
       args:
         FRONTEND_FLAG_SECRET: ${FRONTEND_FLAG_SECRET}
+    container_name: frontend
+    image: frontend
     depends_on:
       - backend
     networks:
@@ -12,7 +15,7 @@ services:
       monitoring_network:
         ipv4_address: 10.2.0.2
     ports:
-      - "80:8080"   
+      - "80:8080"
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -23,8 +26,6 @@ services:
       - "backend.ctf-challenge.edu:10.0.0.3"
       - "monitoring.ctf-challenge.edu:10.2.0.3"
     
-      
-
   backend:
     build:
       context: ./backend
@@ -33,6 +34,8 @@ services:
         BACKEND_ADMIN_PASSWORD: ${BACKEND_ADMIN_PASSWORD}
         BACKEND_FLAG1_SECRET: ${BACKEND_FLAG1_SECRET}
         BACKEND_FLAG2_SECRET: ${BACKEND_FLAG2_SECRET}
+    container_name: backend
+    image: backend
     networks:
       database_network:
         ipv4_address: 10.0.0.3
@@ -51,12 +54,13 @@ services:
       BACKEND_ADMIN_PASSWORD: ${BACKEND_ADMIN_PASSWORD}
       MONITORING_SESSION_SECRET: ${MONITORING_SESSION_SECRET}
  
-
-  monitoring:
+  monitoring-host:
     build:
       context: ./monitoring_host
       args:
         MONITORING_HOST_FLAG_SECRET: ${MONITORING_HOST_FLAG_SECRET}
+    container_name: monitoring-host
+    image: monitoring-host
     depends_on:
       - frontend
     volumes:
@@ -83,9 +87,6 @@ services:
       MONITORING_FLAG2_SECRET: ${MONITORING_FLAG2_SECRET}
       MONITORING_HOST_CHECK_MONITORING_INTERVAL_SECONDS: ${MONITORING_HOST_CHECK_MONITORING_INTERVAL_SECONDS}
     
-      
-      
-
 networks:
   database_network:
     driver: bridge

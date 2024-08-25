@@ -91,7 +91,7 @@ int main() {
         gen_flag(secret1, email, flag_output);
         printf("flag2: %s\n", flag_output);
     } else {
-        printf("flag2: Permission denied");
+        printf("flag2: Permission denied\n");
     }
 
     setuid(original_uid);  // Reset UID to original
