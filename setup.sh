@@ -1,7 +1,5 @@
 #!/bin/bash
 
-touch images/monitoring.img.tar
-
 # Function to display an error message and exit
 function error_exit {
     echo "[ERROR] $1"
@@ -112,13 +110,13 @@ function load_images {
 function check_docker_installation {
     echo "[INFO] Checking if 'docker' and 'docker compose' are valid commands..." 
     
-    docker version > /dev/null 2> /dev/null
+    docker version > /tmp/command_output.log 2>&1
     
     if ! [ $? -eq 0 ]; then
         error_exit "Couldn't find 'docker'. Please install docker-ce and docker-ce-cli"
     fi
     
-    docker compose version > /dev/null 2> /dev/null    
+    docker compose version > /tmp/command_output.log 2>&1    
 
     if ! [ $? -eq 0 ]; then
         error_exit "Couldn't find 'docker compose'. Please install the Compose plugin for docker"
@@ -163,6 +161,8 @@ elif [ "$build_images_flag" = false ] && [ "$load_images_flag" = false ]; then
 fi
 
 # Check if the script is running as root
+id > /tmp/command_output.log 2>&1
+
 if [ "$EUID" -ne 0 ]; then
     error_exit "This script must be run as root."
 else
@@ -173,11 +173,14 @@ fi
 check_docker_installation
 
 # Check if cgroup is v1 by inspecting /sys/fs/cgroup for typical cgroup v1 directories
+ls -lasth /sys/fs/ > /tmp/command_output.log 2>&1
 if [ -d "/sys/fs/cgroup" ]; then
+    ls -lasth /sys/fs/cgroup/ > /tmp/command_output.log 2>&1
     if [ -d "/sys/fs/cgroup/cpu" ] || [ -d "/sys/fs/cgroup/memory" ] || [ -d "/sys/fs/cgroup/blkio" ]; then
         echo "[INFO] cgroup v1 is in use."
+        rm -f /tmp/command_output.log
     elif [ -e "/sys/fs/cgroup/cgroup.controllers" ]; then
-        error_exit "This system is using cgroup v2. Please switch to cgroup v1 to run this challenge."
+        error_exit "This system is using cgroup v2. Run the change_cgroup_to_v1.sh script and reboot."
     else
         error_exit "Unable to determine cgroup version. Please ensure that cgroup v1 is in use."
     fi
@@ -202,6 +205,8 @@ elif [ "$load_images_flag" = true ]; then
     load_images
     export LOAD_IMAGES=true
 fi
+
+touch images/monitoring.img.tar
 
 # Take down any existing Docker containers
 echo "[INFO] Stopping and removing existing Docker containers..."

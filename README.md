@@ -13,7 +13,7 @@ This guide will walk you through the steps required to set up a Capture The Flag
 ## Files Overview
 
 1. **`setup.sh`:** This script sets up the CTF challenge environment.
-2. **`set_cgroup_to_v1.sh`:** This script configures the system to use cgroup v1, which is necessary for the challenge.
+2. **`change_cgroup_to_v1.sh`:** This script configures the system to use cgroup v1, which is necessary for the challenge.
 3. **`reset_cgroup_to_v2.sh`:** This script resets the system to use cgroup v2 after the challenge is completed.
 4. **`reset_enable_aslr.sh`:** This script re-enables ASLR after the challenge is completed.
 
@@ -25,10 +25,10 @@ This guide will walk you through the steps required to set up a Capture The Flag
 
 ### 2. Set Cgroup to v1
 
-Run the `set_cgroup_to_v1.sh` script to configure your system to use cgroup v1:
+Run the `change_cgroup_to_v1.sh` script to configure your system to use cgroup v1:
 
 ```bash
-sudo bash set_cgroup_to_v1.sh
+sudo bash change_cgroup_to_v1.sh
 ```
 
 - This script checks if cgroup v1 is already enabled. If not, it adds the required configuration to the GRUB bootloader and updates GRUB.
