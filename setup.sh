@@ -61,7 +61,7 @@ function build_images {
 function assemble_tar_files {
     # Define the directory and filenames
     local directory="images"
-    local files=("monitoring.img.tar" "backend.img.tar" "monitoring-host.img.tar" "frontend.img.tar")
+    local files=("monitoring.img.tar" "host.img.tar")
 
     # Flag to track if any file is missing
     local all_files_exist=true
@@ -94,25 +94,19 @@ function assemble_tar_files {
 # Function to load Docker images from tarballs
 function load_images {
     local images_dir="images"
-    local images=("monitoring-host" "frontend" "backend")
-
-    echo "[INFO] Loading Docker images from tarballs..."
 
     assemble_tar_files
-
-    for image in "${images[@]}"; do
-    	echo "[INFO] Loading Docker image '$image'..."
     
-        docker import $images_dir/$image.img.tar > /tmp/command_output.log 2>&1
-        if [ $? -eq 0 ]; then
-            echo "[INFO] Docker image '$image' loaded successfully."
-        else
-            error_exit "Failed to load Docker image '$image'."
-        fi
-    done
-
-    rm -f /tmp/command_output.log
-}
+    echo "[INFO] Loading Docker images from tarballs..."
+    docker load -i $images_dir/host.img.tar > /tmp/command_output.log 2>&1
+    
+    if [ $? -eq 0 ]; then
+        echo "[INFO] Docker images loaded successfully."
+    else
+        error_exit "Failed to load Docker images."
+    fi
+        rm -f /tmp/command_output.log
+    }
 
 # Function to check if required commands are available
 function check_docker_installation {
@@ -130,7 +124,7 @@ function check_docker_installation {
         error_exit "Couldn't find 'docker compose'. Please install the Compose plugin for docker"
     fi
     
-    echo "[INFO] 'docker' and 'docker compose' are valid commands. Continuing" 
+    echo "[INFO] 'docker' and 'docker compose' are valid commands. Continuing." 
 }
 
 # Default values for options
@@ -236,4 +230,4 @@ echo "[INFO] Waiting for the monitoring service to start up..."
 monitor_container_logs "monitoring-host"
 
 echo "[INFO] Challenge environment is ready."
-echo "[INFO] To access the challenge more easily, add '<host ip> ctf-challenge.edu' to your attacking system's /etc/hosts file."
+echo "[INFO] Add '<host ip> ctf-challenge.edu' to your attacking system's /etc/hosts file for easier hacking. Enjoy!"

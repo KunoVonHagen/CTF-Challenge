@@ -35,30 +35,12 @@ else
 fi
 
 # Save the frontend Docker image directly on the host
-log_info "Saving 'frontend' Docker image on the host..."
-docker save frontend -o images/frontend.img.tar > /tmp/command_output.log 2>&1
+log_info "Saving the directly hosted docker images on the host..."
+docker save -o images/host.img.tar frontend backend monitoring-host> /tmp/command_output.log 2>&1
 if [ $? -ne 0 ]; then
     log_error "Error saving 'frontend' image."
 else
     log_info "Docker image 'frontend' saved successfully."
-fi
-
-# Save the backend Docker image directly on the host
-log_info "Saving 'backend' Docker image on the host..."
-docker save backend -o images/backend.img.tar > /tmp/command_output.log 2>&1
-if [ $? -ne 0 ]; then
-    log_error "Error saving 'backend' image."
-else
-    log_info "Docker image 'backend' saved successfully."
-fi
-
-# Save the monitoring-host Docker image directly on the host
-log_info "Saving 'monitoring-host' Docker image on the host..."
-docker save monitoring-host -o images/monitoring-host.img.tar > /tmp/command_output.log 2>&1
-if [ $? -ne 0 ]; then
-    log_error "Error saving 'monitoring-host' image."
-else
-    log_info "Docker image 'monitoring-host' saved successfully."
 fi
 
 log_info "All images saved successfully."

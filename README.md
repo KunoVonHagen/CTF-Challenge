@@ -8,6 +8,7 @@ This guide will walk you through the steps required to set up a Capture The Flag
 
 1. **Virtual Machine (VM):** Ensure that you are running these scripts on a VM to avoid compromising your main system.
 2. **Root Privileges:** You must have root access to execute the scripts.
+3. **Docker:** You must have docker-ce and docker-ce-cli as well as the Compose plugin installed.
 
 ## Files Overview
 
