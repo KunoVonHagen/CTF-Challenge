@@ -79,7 +79,7 @@ function assemble_tar_files {
     # Execute the script if any file is missing
     if [ "$all_files_exist" = false ]; then
         echo "[INFO] One or more tar files are missing. Assembling tar files..."
-        ./assemble_tars.sh > /tmp/assemble_tars_output.log 2>&1
+        bash assemble_tars.sh
         if [ $? -eq 0 ]; then
             echo "[INFO] Tar files assembled successfully."
             rm -f /tmp/assemble_tars_output.log
@@ -101,6 +101,8 @@ function load_images {
     assemble_tar_files
 
     for image in "${images[@]}"; do
+    	echo "[INFO] Loading Docker image '$image'..."
+    
         docker import $images_dir/$image.img.tar > /tmp/command_output.log 2>&1
         if [ $? -eq 0 ]; then
             echo "[INFO] Docker image '$image' loaded successfully."
@@ -110,6 +112,25 @@ function load_images {
     done
 
     rm -f /tmp/command_output.log
+}
+
+# Function to check if required commands are available
+function check_docker_installation {
+    echo "[INFO] Checking if 'docker' and 'docker compose' are valid commands..." 
+    
+    docker version > /dev/null 2> /dev/null
+    
+    if ! [ $? -eq 0 ]; then
+        error_exit "Couldn't find 'docker'. Please install docker-ce and docker-ce-cli"
+    fi
+    
+    docker compose version > /dev/null 2> /dev/null    
+
+    if ! [ $? -eq 0 ]; then
+        error_exit "Couldn't find 'docker compose'. Please install the Compose plugin for docker"
+    fi
+    
+    echo "[INFO] 'docker' and 'docker compose' are valid commands. Continuing" 
 }
 
 # Default values for options
@@ -153,6 +174,9 @@ if [ "$EUID" -ne 0 ]; then
 else
     echo "[INFO] Running as root."
 fi
+
+# Check if Docker and Docker Compose are installed
+check_docker_installation
 
 # Check if cgroup is v1 by inspecting /sys/fs/cgroup for typical cgroup v1 directories
 if [ -d "/sys/fs/cgroup" ]; then
