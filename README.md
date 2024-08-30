@@ -4,6 +4,8 @@
 
 This guide will walk you through the steps required to set up a Capture The Flag (CTF) challenge environment on a virtual machine (VM). The setup involves disabling ASLR (Address Space Layout Randomization), configuring the system to use cgroup v1, and running Docker containers. After completing the challenge, scripts are provided to reset these settings to their original state. **It is highly recommended to run this setup in a VM**, as it involves changes that may reduce the security of your host system.
 
+This challenge consists of getting 6 user-specific flags.
+
 ## Prerequisites
 
 1. **Virtual Machine (VM):** Ensure that you are running these scripts on a VM to avoid compromising your main system.
@@ -57,7 +59,14 @@ After completing the setup, the CTF environment will be ready. You can now acces
 
 Once the challenge is completed, follow these steps to reset the system to its original state:
 
-### 1. Re-enable ASLR
+### 1. Shut down the containers
+Run the `shutdown_ctf.sh` script to stop the container:
+
+```bash
+sudo bash shutdown_ctf.sh
+```
+
+### 2. Re-enable ASLR
 
 Run the `reset_enable_aslr.sh` script to re-enable ASLR:
 
@@ -67,7 +76,7 @@ sudo bash reset_enable_aslr.sh
 
 - This script sets `randomize_va_space` back to `2`, restoring ASLR.
 
-### 2. Reset Cgroup to v2
+### 3. Reset Cgroup to v2
 
 Run the `reset_cgroup_to_v2.sh` script to revert the cgroup configuration to v2:
 
