@@ -88,7 +88,7 @@ int main() {
     printf("flag1: %s\n", flag_output);
 
     if (original_uid == 0) {
-        gen_flag(secret1, email, flag_output);
+        gen_flag(secret2, email, flag_output);
         printf("flag2: %s\n", flag_output);
     } else {
         printf("flag2: Permission denied\n");
