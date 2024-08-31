@@ -1,8 +1,0 @@
-2020-03-28 ~ admin
-Setting up ssh to allow remote connections for our staff
-
-2020-03-28 ~ admin
-Split the root account from dbadmin. Staff doesnt need root access anyway.
-
-2020-04-02 ~ admin
-Setting up CoolSH. Finally i dont need to use OpenSSH anymore. I will just do the same on the monitoring server so i can just authenticate with my public key
