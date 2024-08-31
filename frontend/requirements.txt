@@ -1,4 +1,0 @@
-flask
-sockets
-requests
-pycryptodome

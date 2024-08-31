@@ -1,5 +1,0 @@
-2020-04-04 ~ admin
-Setting up the monitoring service so our visitors can see if there is a problem with our frontend
-
-2020-04-05 ~ admin
-Setting up CoolSH. No OpenSSH for this server. Staff doesnt need access here anyway
