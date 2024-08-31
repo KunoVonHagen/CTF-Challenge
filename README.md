@@ -4,6 +4,8 @@
 
 This guide will walk you through the steps required to set up a Capture The Flag (CTF) challenge environment on a virtual machine (VM). The setup involves disabling ASLR (Address Space Layout Randomization), configuring the system to use cgroup v1, and running Docker containers. After completing the challenge, scripts are provided to reset these settings to their original state. **It is highly recommended to run this setup in a VM**, as it involves changes that may reduce the security of your host system.
 
+Use the `unix_passwords.txt` (can be found [here](https://github.com/rapid7/metasploit-framework/blob/master/data/wordlists/unix_passwords.txt)) and `unix_users.txt` (can be found [here](https://github.com/rapid7/metasploit-framework/blob/master/data/wordlists/unix_users.txt)) wordlists to bruteforce if you feel the need to. All credentials that are supposed to be found through brute-force are include in these files.
+
 This challenge consists of getting 6 user-specific flags.
 
 ## Prerequisites
