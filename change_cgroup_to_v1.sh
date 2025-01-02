@@ -13,27 +13,37 @@ else
     echo "[INFO] Running as root."
 fi
 
-# Check if the GRUB configuration already contains the setting
-if grep -q "systemd.unified_cgroup_hierarchy=0" /etc/default/grub; then
-    echo "[INFO] systemd.unified_cgroup_hierarchy=0 is already set in GRUB configuration."
-else
-    # Add systemd.unified_cgroup_hierarchy=0 to GRUB_CMDLINE_LINUX
-    echo "[INFO] Adding systemd.unified_cgroup_hierarchy=0 to GRUB_CMDLINE_LINUX."
-    sed -i 's/GRUB_CMDLINE_LINUX="\(.*\)"/GRUB_CMDLINE_LINUX="\1 systemd.unified_cgroup_hierarchy=0"/' /etc/default/grub
-    if [ $? -eq 0 ]; then
-        echo "[INFO] Successfully added the cgroup configuration to GRUB."
-    else
-        error_exit "Failed to modify the GRUB configuration."
-    fi
+# Define the parameters to be added
+PARAM1="systemd.unified_cgroup_hierarchy=0"
+PARAM2="SYSTEMD_CGROUP_ENABLE_LEGACY_FORCE=1"
 
-    # Update GRUB
-    echo "[INFO] Updating GRUB configuration..."
-    update-grub
-    if [ $? -eq 0 ]; then
-        echo "[INFO] GRUB configuration updated successfully."
+# Function to add a parameter to GRUB_CMDLINE_LINUX if not already present
+function add_grub_param {
+    local param="$1"
+    if grep -q "$param" /etc/default/grub; then
+        echo "[INFO] $param is already set in GRUB configuration."
     else
-        error_exit "Failed to update GRUB."
+        echo "[INFO] Adding $param to GRUB_CMDLINE_LINUX."
+        sed -i "s/GRUB_CMDLINE_LINUX=\"\(.*\)\"/GRUB_CMDLINE_LINUX=\"\1 $param\"/" /etc/default/grub
+        if [ $? -eq 0 ]; then
+            echo "[INFO] Successfully added $param to GRUB."
+        else
+            error_exit "Failed to modify the GRUB configuration for $param."
+        fi
     fi
+}
+
+# Add both parameters to GRUB_CMDLINE_LINUX
+add_grub_param "$PARAM1"
+add_grub_param "$PARAM2"
+
+# Update GRUB
+echo "[INFO] Updating GRUB configuration..."
+update-grub
+if [ $? -eq 0 ]; then
+    echo "[INFO] GRUB configuration updated successfully."
+else
+    error_exit "Failed to update GRUB."
 fi
 
 # Inform the user to reboot the system
